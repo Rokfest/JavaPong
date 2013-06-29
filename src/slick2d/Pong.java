@@ -7,13 +7,11 @@ import org.newdawn.slick.BasicGame;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.SlickException;
-
 import org.newdawn.slick.geom.Rectangle;
 
 public class Pong extends BasicGame
 {
     //Screen Dynamics
-
     private static final int SCREEN_WIDTH = 640;
     private static final int SCREEN_HEIGHT = 480;
     //Paddle and ball sizes
