@@ -6,6 +6,7 @@ import org.newdawn.slick.AppGameContainer;
 import org.newdawn.slick.BasicGame;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
+import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.geom.Rectangle;
 
@@ -17,13 +18,14 @@ public class Pong extends BasicGame
     //Paddle and ball sizes
     private static int PADDLE_WIDTH = 10;
     private static int PADDLE_HEIGHT = 100;
+    private static int PADDLE_SPEED = 3;
     private static int BALL_SIZE = 10;
     //Initiate all actors
     private static Rectangle player1;
     private static Rectangle player2;
     private static Rectangle ball;
     //Set ball speed and initiate directional vectors
-    private static int ballSpeed = 2;
+    private static int ballSpeed = 1;
     private static int x;
     private static int y;
     
@@ -54,6 +56,30 @@ public class Pong extends BasicGame
     @Override
     public void update(GameContainer gc, int i) throws SlickException
     {
+        //Slow the game down by setting the thread to sleep ever 5 milliseconds
+        //Best to look for alternate solution
+        try
+        {
+            Thread.sleep(5);
+        }catch(Exception ex)
+        {
+            throw new RuntimeException(ex);
+        }
+        Input input = gc.getInput();
+        if(input.isKeyDown(Input.KEY_DOWN))
+        {
+            if(player1.getY() < SCREEN_HEIGHT - 1 - PADDLE_HEIGHT)
+            {
+                player1.setLocation(player1.getX(), player1.getY() + PADDLE_SPEED);
+            }
+        }
+        else if(input.isKeyDown(Input.KEY_UP))
+        {
+            if(player1.getY() > 1)
+            {
+                player1.setLocation(player1.getX(), player1.getY() - PADDLE_SPEED);
+            }
+        }
         //Ball physics (Let's just get it bouncing) Inverts directions at walls
         if (ball.getY() <= 1 || ball.getY() >= SCREEN_HEIGHT - 1 - BALL_SIZE) {
             y *= -1;
@@ -68,7 +94,7 @@ public class Pong extends BasicGame
         //Random mechanic to speed up ball speed after 5 seconds, just for fun.
         if(System.currentTimeMillis() - curTime >= 5000)
         {
-            ballSpeed++;
+            //ballSpeed++;
             if(x < 0)
                 x = -ballSpeed;
             else
