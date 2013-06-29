@@ -26,9 +26,12 @@ public class Pong extends BasicGame
     private static Rectangle player2;
     private static Rectangle ball;
     //Set ball speed and initiate directional vectors
-    private static int ballSpeed = 1;
+    private static int ballSpeed = 2;
     private static int x;
     private static int y;
+    //Player variables
+    private static int player1Move = 0;
+    private static int player2Move = 0;
     //Random variables necessary for time tracking
     private static long curTime;
 
@@ -58,15 +61,16 @@ public class Pong extends BasicGame
     {
         /* Slow the game down by setting the thread to sleep every x milliseconds
          * Best to look for alternate solution but good for debugging
-         * 20 ms for debugging, 5 for gameplay
+         * 40 ms for debugging, 10 for gameplay
          */
         try
         {
-            Thread.sleep(5);
+            Thread.sleep(10);
         } catch (Exception ex)
         {
             throw new RuntimeException(ex);
         }
+
         //Input detect for Player 1
         Input input = gc.getInput();
         if (input.isKeyDown(Input.KEY_DOWN))
@@ -74,12 +78,14 @@ public class Pong extends BasicGame
             if (player1.getY() < SCREEN_HEIGHT - 1 - PADDLE_HEIGHT)
             {
                 player1.setLocation(player1.getX(), player1.getY() + PADDLE_SPEED);
+                player1Move = PADDLE_SPEED;
             }
         } else if (input.isKeyDown(Input.KEY_UP))
         {
             if (player1.getY() > 1)
             {
                 player1.setLocation(player1.getX(), player1.getY() - PADDLE_SPEED);
+                player1Move = -PADDLE_SPEED;
             }
         }
         //Input detect for Player 2
@@ -88,47 +94,69 @@ public class Pong extends BasicGame
             if (player2.getY() < SCREEN_HEIGHT - 1 - PADDLE_HEIGHT)
             {
                 player2.setLocation(player2.getX(), player2.getY() + PADDLE_SPEED);
+                player2Move = PADDLE_SPEED;
             }
         } else if (input.isKeyDown(Input.KEY_W))
         {
             if (player2.getY() > 1)
             {
                 player2.setLocation(player2.getX(), player2.getY() - PADDLE_SPEED);
+                player2Move = -PADDLE_SPEED;
             }
         }
         //Ball physics | Currently inverts directions at all walls
         if (detectCollision())
         {
-            //Collisions are simple for now
-            //Doesn't take into account paddle velocity
-            System.out.println("COLLISION!!!");
+            //Collisions are simple for now but take into account paddle movement            
             x *= -1;
+            //Random mechanic to speed up ball speed after 5 seconds, just for fun.
+            if (System.currentTimeMillis() - curTime >= 5000)
+            {
+                //ballSpeed++;
+                if (x < 0)
+                {
+                    x = -ballSpeed;
+                } else
+                {
+                    x = ballSpeed;
+                }
+                curTime = System.currentTimeMillis();
+            }
         } else if (ball.getX() <= 1 || ball.getX() >= SCREEN_WIDTH - 1 - BALL_SIZE)
         {
-            x *= -1;
+            //Reset the ball if it goes pass the paddles.
+            ball = new Rectangle((SCREEN_WIDTH - BALL_SIZE) / 2, SCREEN_HEIGHT / 2, BALL_SIZE, BALL_SIZE);
+            curTime = System.currentTimeMillis();
+            ballSpeed = 2;
+            if (x < 0)
+            {
+                x = ballSpeed;
+            } else
+            {
+                x = -ballSpeed;
+            }
+            y = -ballSpeed;
+
+            try
+            {
+                Thread.sleep(1000);
+            } catch (Exception ex)
+            {
+                throw new RuntimeException(ex);
+            }
+
+            //Give score here
         }
         if (ball.getY() <= 1 || ball.getY() >= SCREEN_HEIGHT - 1 - BALL_SIZE)
         {
             y *= -1;
         }
-
+        
+        player1Move = 0;
+        player2Move = 0;
+        
         ball.setLocation(ball.getX() + x, ball.getY() + y);
         gc.getGraphics().draw(ball);
-
-//        //Random mechanic to speed up ball speed after 5 seconds, just for fun.
-//        if(System.currentTimeMillis() - curTime >= 5000)
-//        {
-//            //ballSpeed++;
-//            if(x < 0)
-//                x = -ballSpeed;
-//            else
-//                x = ballSpeed;
-//            if(y < 0)
-//                y = -ballSpeed;
-//            else
-//                y = ballSpeed;
-//            curTime = System.currentTimeMillis();
-//        }
     }
 
     //Detect collisions with the paddles
@@ -143,6 +171,26 @@ public class Pong extends BasicGame
                 //Ball should be within vertical range as well
                 if (ball.getY() >= player1.getY() && ball.getY() <= (player1.getY() + PADDLE_HEIGHT))
                 {
+                    if(player1Move > 0)
+                    {
+                        if(y > 0)
+                        {
+                            y++;
+                        }
+                        else
+                            y--;
+                        System.out.println("Y: " + y);
+                    }
+                    else if(player1Move < 0)
+                    {
+                        if(y > 0)
+                        {
+                            y--;
+                        }
+                        else
+                            y++;
+                        System.out.println("Y: " + y);
+                    }
                     return true;
                 }
             }
@@ -154,6 +202,26 @@ public class Pong extends BasicGame
                 //Ball should be within vertical range as well
                 if (ball.getY() >= player2.getY() && ball.getY() <= (player2.getY() + PADDLE_HEIGHT))
                 {
+                    if(player2Move > 0)
+                    {
+                        if(y > 0)
+                        {
+                            y++;
+                        }
+                        else
+                            y--;
+                        System.out.println("Y: " + y);
+                    }
+                    else if(player2Move < 0)
+                    {
+                        if(y > 0)
+                        {
+                            y--;
+                        }
+                        else
+                            y++;
+                        System.out.println("Y: " + y);
+                    }
                     return true;
                 }
             }
