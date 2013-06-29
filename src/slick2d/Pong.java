@@ -13,6 +13,7 @@ import org.newdawn.slick.geom.Rectangle;
 public class Pong extends BasicGame
 {
     //Screen Dynamics
+
     private static final int SCREEN_WIDTH = 640;
     private static final int SCREEN_HEIGHT = 480;
     //Paddle and ball sizes
@@ -28,7 +29,6 @@ public class Pong extends BasicGame
     private static int ballSpeed = 1;
     private static int x;
     private static int y;
-    
     //Random variables necessary for time tracking
     private static long curTime;
 
@@ -43,7 +43,7 @@ public class Pong extends BasicGame
         curTime = System.currentTimeMillis();
         x = -ballSpeed;
         y = -ballSpeed;
-        
+
         int x_player1 = 1;
         int x_player2 = (SCREEN_WIDTH - PADDLE_WIDTH - 1);
         int y_center = (SCREEN_HEIGHT - PADDLE_HEIGHT) / 2;
@@ -56,27 +56,23 @@ public class Pong extends BasicGame
     @Override
     public void update(GameContainer gc, int i) throws SlickException
     {
-        //Slow the game down by setting the thread to sleep ever 5 milliseconds
+        //Slow the game down by setting the thread to sleep every x milliseconds
         //Best to look for alternate solution
-        try
-        {
-            Thread.sleep(5);
-        }catch(Exception ex)
-        {
+        try {
+            Thread.sleep(20);
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+        //Collision detection
+        detectCollision();
+        //Input detect for Player 1
         Input input = gc.getInput();
-        if(input.isKeyDown(Input.KEY_DOWN))
-        {
-            if(player1.getY() < SCREEN_HEIGHT - 1 - PADDLE_HEIGHT)
-            {
+        if (input.isKeyDown(Input.KEY_DOWN)) {
+            if (player1.getY() < SCREEN_HEIGHT - 1 - PADDLE_HEIGHT) {
                 player1.setLocation(player1.getX(), player1.getY() + PADDLE_SPEED);
             }
-        }
-        else if(input.isKeyDown(Input.KEY_UP))
-        {
-            if(player1.getY() > 1)
-            {
+        } else if (input.isKeyDown(Input.KEY_UP)) {
+            if (player1.getY() > 1) {
                 player1.setLocation(player1.getX(), player1.getY() - PADDLE_SPEED);
             }
         }
@@ -90,20 +86,39 @@ public class Pong extends BasicGame
 
         ball.setLocation(ball.getX() + x, ball.getY() + y);
         gc.getGraphics().draw(ball);
-        
-        //Random mechanic to speed up ball speed after 5 seconds, just for fun.
-        if(System.currentTimeMillis() - curTime >= 5000)
+
+//        //Random mechanic to speed up ball speed after 5 seconds, just for fun.
+//        if(System.currentTimeMillis() - curTime >= 5000)
+//        {
+//            //ballSpeed++;
+//            if(x < 0)
+//                x = -ballSpeed;
+//            else
+//                x = ballSpeed;
+//            if(y < 0)
+//                y = -ballSpeed;
+//            else
+//                y = ballSpeed;
+//            curTime = System.currentTimeMillis();
+//        }
+    }
+
+    //Doesn't work. Not sure why...
+    private static void detectCollision()
+    {
+        //When the ball is going to the left
+        if(x < 0)
         {
-            //ballSpeed++;
-            if(x < 0)
-                x = -ballSpeed;
-            else
-                x = ballSpeed;
-            if(y < 0)
-                y = -ballSpeed;
-            else
-                y = ballSpeed;
-            curTime = System.currentTimeMillis();
+            //Ball should be within paddle horizontal range
+            if(ball.getX() <= player1.getX() + PADDLE_WIDTH + 1)
+            {
+                //Ball should be within vertical range as well
+                if(ball.getY() <= player1.getY() && ball.getY() >= player1.getY() + PADDLE_HEIGHT)
+                {
+                    x *= -1;
+                    ball.setLocation(ball.getX() + x, ball.getY() + y);
+                }
+            }
         }
     }
 
