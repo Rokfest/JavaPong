@@ -60,36 +60,58 @@ public class Pong extends BasicGame
          * Best to look for alternate solution but good for debugging
          * 20 ms for debugging, 5 for gameplay
          */
-        try {
+        try
+        {
             Thread.sleep(5);
-        } catch (Exception ex) {
+        } catch (Exception ex)
+        {
             throw new RuntimeException(ex);
         }
         //Input detect for Player 1
         Input input = gc.getInput();
-        if (input.isKeyDown(Input.KEY_DOWN)) {
-            if (player1.getY() < SCREEN_HEIGHT - 1 - PADDLE_HEIGHT) {
+        if (input.isKeyDown(Input.KEY_DOWN))
+        {
+            if (player1.getY() < SCREEN_HEIGHT - 1 - PADDLE_HEIGHT)
+            {
                 player1.setLocation(player1.getX(), player1.getY() + PADDLE_SPEED);
             }
-        } else if (input.isKeyDown(Input.KEY_UP)) {
-            if (player1.getY() > 1) {
+        } else if (input.isKeyDown(Input.KEY_UP))
+        {
+            if (player1.getY() > 1)
+            {
                 player1.setLocation(player1.getX(), player1.getY() - PADDLE_SPEED);
             }
         }
+        //Input detect for Player 2
+        if (input.isKeyDown(Input.KEY_S))
+        {
+            if (player2.getY() < SCREEN_HEIGHT - 1 - PADDLE_HEIGHT)
+            {
+                player2.setLocation(player2.getX(), player2.getY() + PADDLE_SPEED);
+            }
+        } else if (input.isKeyDown(Input.KEY_W))
+        {
+            if (player2.getY() > 1)
+            {
+                player2.setLocation(player2.getX(), player2.getY() - PADDLE_SPEED);
+            }
+        }
         //Ball physics | Currently inverts directions at all walls
-        if(detectCollision())
+        if (detectCollision())
         {
             //Collisions are simple for now
             //Doesn't take into account paddle velocity
+            System.out.println("COLLISION!!!");
+            x *= -1;
+        } else if (ball.getX() <= 1 || ball.getX() >= SCREEN_WIDTH - 1 - BALL_SIZE)
+        {
             x *= -1;
         }
-        else if (ball.getX() <= 1 || ball.getX() >= SCREEN_WIDTH - 1 - BALL_SIZE) {
-            x *= -1;
-        }
-        if (ball.getY() <= 1 || ball.getY() >= SCREEN_HEIGHT - 1 - BALL_SIZE) {
+        if (ball.getY() <= 1 || ball.getY() >= SCREEN_HEIGHT - 1 - BALL_SIZE)
+        {
             y *= -1;
         }
-        
+
         ball.setLocation(ball.getX() + x, ball.getY() + y);
         gc.getGraphics().draw(ball);
 
@@ -113,24 +135,24 @@ public class Pong extends BasicGame
     private static boolean detectCollision()
     {
         //When the ball is going to the left
-        if(x < 0)
+        if (x < 0)
         {
             //Ball should be within paddle horizontal range
-            if(ball.getX() <= player1.getX() + PADDLE_WIDTH + 1)
+            if (ball.getX() <= player1.getX() + PADDLE_WIDTH + 1)
             {
                 //Ball should be within vertical range as well
-                if(ball.getY() >= player1.getY() && ball.getY() <= (player1.getY() + PADDLE_HEIGHT))
+                if (ball.getY() >= player1.getY() && ball.getY() <= (player1.getY() + PADDLE_HEIGHT))
                 {
                     return true;
                 }
             }
-        }else
+        } else
         {
             //Ball should be within paddle horizontal range
-            if(ball.getX() >= player2.getX() - 1)
+            if (ball.getX() + BALL_SIZE >= player2.getX() - 1)
             {
                 //Ball should be within vertical range as well
-                if(ball.getY() >= player2.getY() && ball.getY() <= (player2.getY() + PADDLE_HEIGHT))
+                if (ball.getY() >= player2.getY() && ball.getY() <= (player2.getY() + PADDLE_HEIGHT))
                 {
                     return true;
                 }
@@ -154,12 +176,14 @@ public class Pong extends BasicGame
 
     public static void main(String[] args)
     {
-        try {
+        try
+        {
             AppGameContainer appgc;
             appgc = new AppGameContainer(new Pong("Pong"));
             appgc.setDisplayMode(SCREEN_WIDTH, SCREEN_HEIGHT, false);
             appgc.start();
-        } catch (SlickException ex) {
+        } catch (SlickException ex)
+        {
             Logger.getLogger(Pong.class.getName()).log(Level.SEVERE, null, ex);
         }
 
