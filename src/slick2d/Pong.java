@@ -56,15 +56,15 @@ public class Pong extends BasicGame
     @Override
     public void update(GameContainer gc, int i) throws SlickException
     {
-        //Slow the game down by setting the thread to sleep every x milliseconds
-        //Best to look for alternate solution
+        /* Slow the game down by setting the thread to sleep every x milliseconds
+         * Best to look for alternate solution but good for debugging
+         * 20 ms for debugging, 5 for gameplay
+         */
         try {
-            Thread.sleep(20);
+            Thread.sleep(5);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-        //Collision detection
-        detectCollision();
         //Input detect for Player 1
         Input input = gc.getInput();
         if (input.isKeyDown(Input.KEY_DOWN)) {
@@ -76,14 +76,20 @@ public class Pong extends BasicGame
                 player1.setLocation(player1.getX(), player1.getY() - PADDLE_SPEED);
             }
         }
-        //Ball physics (Let's just get it bouncing) Inverts directions at walls
+        //Ball physics | Currently inverts directions at all walls
+        if(detectCollision())
+        {
+            //Collisions are simple for now
+            //Doesn't take into account paddle velocity
+            x *= -1;
+        }
+        else if (ball.getX() <= 1 || ball.getX() >= SCREEN_WIDTH - 1 - BALL_SIZE) {
+            x *= -1;
+        }
         if (ball.getY() <= 1 || ball.getY() >= SCREEN_HEIGHT - 1 - BALL_SIZE) {
             y *= -1;
         }
-        if (ball.getX() <= 1 || ball.getX() >= SCREEN_WIDTH - 1 - BALL_SIZE) {
-            x *= -1;
-        }
-
+        
         ball.setLocation(ball.getX() + x, ball.getY() + y);
         gc.getGraphics().draw(ball);
 
@@ -103,8 +109,8 @@ public class Pong extends BasicGame
 //        }
     }
 
-    //Doesn't work. Not sure why...
-    private static void detectCollision()
+    //Detect collisions with the paddles
+    private static boolean detectCollision()
     {
         //When the ball is going to the left
         if(x < 0)
@@ -113,13 +119,24 @@ public class Pong extends BasicGame
             if(ball.getX() <= player1.getX() + PADDLE_WIDTH + 1)
             {
                 //Ball should be within vertical range as well
-                if(ball.getY() <= player1.getY() && ball.getY() >= player1.getY() + PADDLE_HEIGHT)
+                if(ball.getY() >= player1.getY() && ball.getY() <= (player1.getY() + PADDLE_HEIGHT))
                 {
-                    x *= -1;
-                    ball.setLocation(ball.getX() + x, ball.getY() + y);
+                    return true;
+                }
+            }
+        }else
+        {
+            //Ball should be within paddle horizontal range
+            if(ball.getX() >= player2.getX() - 1)
+            {
+                //Ball should be within vertical range as well
+                if(ball.getY() >= player2.getY() && ball.getY() <= (player2.getY() + PADDLE_HEIGHT))
+                {
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     @Override
