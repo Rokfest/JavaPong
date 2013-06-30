@@ -32,6 +32,8 @@ public class Pong extends BasicGame
     //Player variables
     private static int player1Move = 0;
     private static int player2Move = 0;
+    private static int player1Score = 0;
+    private static int player2Score = 0;
     //Random variables necessary for time tracking
     private static long curTime;
 
@@ -112,7 +114,7 @@ public class Pong extends BasicGame
             //Random mechanic to speed up ball speed after 5 seconds, just for fun.
             if (System.currentTimeMillis() - curTime >= 5000)
             {
-                //ballSpeed++;
+                ballSpeed++;
                 if (x < 0)
                 {
                     x = -ballSpeed;
@@ -124,15 +126,17 @@ public class Pong extends BasicGame
             }
         } else if (ball.getX() <= 1 || ball.getX() >= SCREEN_WIDTH - 1 - BALL_SIZE)
         {
-            //Reset the ball if it goes pass the paddles.
+            //Reset the ball if it goes pass the paddles & Update player score
             ball = new Rectangle((SCREEN_WIDTH - BALL_SIZE) / 2, SCREEN_HEIGHT / 2, BALL_SIZE, BALL_SIZE);
             curTime = System.currentTimeMillis();
             ballSpeed = 2;
             if (x < 0)
             {
+                player2Score++;
                 x = ballSpeed;
             } else
             {
+                player1Score++;
                 x = -ballSpeed;
             }
             y = -ballSpeed;
@@ -234,6 +238,8 @@ public class Pong extends BasicGame
     {
         //Draw game background
         g.drawString("Pong", (SCREEN_WIDTH) / 4, 0);
+        g.drawString("" + player1Score, (SCREEN_WIDTH) / 2 - 30, 10);
+        g.drawString("" + player2Score, (SCREEN_WIDTH) / 2 + 20, 10);
         g.drawLine(SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT);
 
         g.draw(player1);
