@@ -4,29 +4,31 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.newdawn.slick.AppGameContainer;
 import org.newdawn.slick.BasicGame;
+import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.geom.Rectangle;
+//A bit of a hack to change the ball into a circle
+import org.newdawn.slick.geom.RoundedRectangle;
 
 public class Pong extends BasicGame
 {
     //Screen Dynamics
-
     private static final int SCREEN_WIDTH = 640;
     private static final int SCREEN_HEIGHT = 480;
     //Paddle and ball sizes
     private static int PADDLE_WIDTH = 10;
     private static int PADDLE_HEIGHT = 100;
     private static int PADDLE_SPEED = 3;
-    private static int BALL_SIZE = 10;
+    private static int BALL_SIZE = 12;
     //Initiate all actors
     private static Rectangle player1;
     private static Rectangle player2;
-    private static Rectangle ball;
+    private static RoundedRectangle ball;
     //Set ball speed and initiate directional vectors
-    private static int ballSpeed = 2;
+    private static int ballSpeed = 3;
     private static int x;
     private static int y;
     //Player variables
@@ -36,6 +38,8 @@ public class Pong extends BasicGame
     private static int player2Score = 0;
     //Random variables necessary for time tracking
     private static long curTime;
+    //Some hack to make the ball a circle
+    private static int CURVE_RADIUS = 10;
 
     public Pong(String gamename)
     {
@@ -55,24 +59,13 @@ public class Pong extends BasicGame
 
         player1 = new Rectangle(x_player1, y_center, PADDLE_WIDTH, PADDLE_HEIGHT);
         player2 = new Rectangle(x_player2, y_center, PADDLE_WIDTH, PADDLE_HEIGHT);
-        ball = new Rectangle((SCREEN_WIDTH - BALL_SIZE) / 2, SCREEN_HEIGHT / 2, BALL_SIZE, BALL_SIZE);
+        ball = new RoundedRectangle((SCREEN_WIDTH - BALL_SIZE) / 2
+                , SCREEN_HEIGHT / 2, BALL_SIZE, BALL_SIZE, CURVE_RADIUS);
     }
 
     @Override
     public void update(GameContainer gc, int i) throws SlickException
     {
-        /* Slow the game down by setting the thread to sleep every x milliseconds
-         * Best to look for alternate solution but good for debugging
-         * 40 ms for debugging, 10 for gameplay
-         */
-        try
-        {
-            Thread.sleep(10);
-        } catch (Exception ex)
-        {
-            throw new RuntimeException(ex);
-        }
-
         //Input detect for Player 1
         Input input = gc.getInput();
         if (input.isKeyDown(Input.KEY_DOWN))
@@ -127,7 +120,7 @@ public class Pong extends BasicGame
         } else if (ball.getX() <= 1 || ball.getX() >= SCREEN_WIDTH - 1 - BALL_SIZE)
         {
             //Reset the ball if it goes pass the paddles & Update player score
-            ball = new Rectangle((SCREEN_WIDTH - BALL_SIZE) / 2, SCREEN_HEIGHT / 2, BALL_SIZE, BALL_SIZE);
+            ball.setLocation((SCREEN_WIDTH - BALL_SIZE) / 2, SCREEN_HEIGHT / 2);
             curTime = System.currentTimeMillis();
             ballSpeed = 2;
             if (x < 0)
@@ -175,6 +168,8 @@ public class Pong extends BasicGame
                 //Ball should be within vertical range as well
                 if (ball.getY() >= player1.getY() && ball.getY() <= (player1.getY() + PADDLE_HEIGHT))
                 {
+                    //Here we change the vertical speed of the ball depending on player1
+                    //movement
                     if(player1Move > 0)
                     {
                         if(y > 0)
@@ -183,7 +178,6 @@ public class Pong extends BasicGame
                         }
                         else
                             y--;
-                        System.out.println("Y: " + y);
                     }
                     else if(player1Move < 0)
                     {
@@ -193,7 +187,6 @@ public class Pong extends BasicGame
                         }
                         else
                             y++;
-                        System.out.println("Y: " + y);
                     }
                     return true;
                 }
@@ -206,6 +199,8 @@ public class Pong extends BasicGame
                 //Ball should be within vertical range as well
                 if (ball.getY() >= player2.getY() && ball.getY() <= (player2.getY() + PADDLE_HEIGHT))
                 {
+                    //Here we change the vertical speed of the ball depending on player2
+                    //movement
                     if(player2Move > 0)
                     {
                         if(y > 0)
@@ -214,7 +209,6 @@ public class Pong extends BasicGame
                         }
                         else
                             y--;
-                        System.out.println("Y: " + y);
                     }
                     else if(player2Move < 0)
                     {
@@ -224,7 +218,6 @@ public class Pong extends BasicGame
                         }
                         else
                             y++;
-                        System.out.println("Y: " + y);
                     }
                     return true;
                 }
@@ -236,14 +229,19 @@ public class Pong extends BasicGame
     @Override
     public void render(GameContainer gc, Graphics g) throws SlickException
     {
+        
         //Draw game background
+        g.setColor(Color.white);
         g.drawString("Pong", (SCREEN_WIDTH) / 4, 0);
         g.drawString("" + player1Score, (SCREEN_WIDTH) / 2 - 30, 10);
         g.drawString("" + player2Score, (SCREEN_WIDTH) / 2 + 20, 10);
         g.drawLine(SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT);
 
+        
+        g.setColor(Color.green);
         g.draw(player1);
         g.draw(player2);
+        g.setColor(Color.white);
         g.draw(ball);
 
     }
@@ -255,6 +253,8 @@ public class Pong extends BasicGame
             AppGameContainer appgc;
             appgc = new AppGameContainer(new Pong("Pong"));
             appgc.setDisplayMode(SCREEN_WIDTH, SCREEN_HEIGHT, false);
+            //Setting the FrameRate took away the need to use Thread.sleep()
+            appgc.setTargetFrameRate(60);
             appgc.start();
         } catch (SlickException ex)
         {
