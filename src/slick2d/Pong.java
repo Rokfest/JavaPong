@@ -9,7 +9,6 @@ import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
-import org.newdawn.slick.geom.Rectangle;
 //A bit of a hack to change the ball into a circle
 import org.newdawn.slick.geom.RoundedRectangle;
 
@@ -21,21 +20,15 @@ public class Pong extends BasicGame
     //Paddle and ball sizes
     private static int PADDLE_WIDTH = 10;
     private static int PADDLE_HEIGHT = 100;
-    private static int PADDLE_SPEED = 3;
     private static int BALL_SIZE = 12;
     //Initiate all actors
-    private static Rectangle player1;
-    private static Rectangle player2;
+    private static Paddle leftPaddle;
+    private static Paddle rightPaddle;
     private static RoundedRectangle ball;
     //Set ball speed and initiate directional vectors
     private static int ballSpeed = 3;
-    private static int x;
-    private static int y;
-    //Player variables
-    private static int player1Move = 0;
-    private static int player2Move = 0;
-    private static int player1Score = 0;
-    private static int player2Score = 0;
+    private static int horizontalSpeed;
+    private static int verticalSpeed;
     //Random variables necessary for time tracking
     private static long curTime;
     //Some hack to make the ball a circle
@@ -50,15 +43,15 @@ public class Pong extends BasicGame
     public void init(GameContainer gc) throws SlickException
     {
         curTime = System.currentTimeMillis();
-        x = -ballSpeed;
-        y = -ballSpeed;
+        horizontalSpeed = -ballSpeed;
+        verticalSpeed = -ballSpeed;
 
-        int x_player1 = 1;
-        int x_player2 = (SCREEN_WIDTH - PADDLE_WIDTH - 1);
+        int paddle1 = 1;
+        int paddle2 = (SCREEN_WIDTH - PADDLE_WIDTH - 1);
         int y_center = (SCREEN_HEIGHT - PADDLE_HEIGHT) / 2;
 
-        player1 = new Rectangle(x_player1, y_center, PADDLE_WIDTH, PADDLE_HEIGHT);
-        player2 = new Rectangle(x_player2, y_center, PADDLE_WIDTH, PADDLE_HEIGHT);
+        leftPaddle = new Paddle(paddle1, y_center);
+        rightPaddle = new Paddle(paddle2, y_center);
         ball = new RoundedRectangle((SCREEN_WIDTH - BALL_SIZE) / 2
                 , SCREEN_HEIGHT / 2, BALL_SIZE, BALL_SIZE, CURVE_RADIUS);
     }
@@ -70,50 +63,46 @@ public class Pong extends BasicGame
         Input input = gc.getInput();
         if (input.isKeyDown(Input.KEY_DOWN))
         {
-            if (player1.getY() < SCREEN_HEIGHT - 1 - PADDLE_HEIGHT)
+            if (leftPaddle.getY() < SCREEN_HEIGHT - 1 - PADDLE_HEIGHT)
             {
-                player1.setLocation(player1.getX(), player1.getY() + PADDLE_SPEED);
-                player1Move = PADDLE_SPEED;
+                leftPaddle.moveDown();
             }
         } else if (input.isKeyDown(Input.KEY_UP))
         {
-            if (player1.getY() > 1)
+            if (leftPaddle.getY() > 1)
             {
-                player1.setLocation(player1.getX(), player1.getY() - PADDLE_SPEED);
-                player1Move = -PADDLE_SPEED;
+                leftPaddle.moveUp();
             }
         }
         //Input detect for Player 2
         if (input.isKeyDown(Input.KEY_S))
         {
-            if (player2.getY() < SCREEN_HEIGHT - 1 - PADDLE_HEIGHT)
+            if (rightPaddle.getY() < SCREEN_HEIGHT - 1 - PADDLE_HEIGHT)
             {
-                player2.setLocation(player2.getX(), player2.getY() + PADDLE_SPEED);
-                player2Move = PADDLE_SPEED;
+                rightPaddle.moveDown();
             }
         } else if (input.isKeyDown(Input.KEY_W))
         {
-            if (player2.getY() > 1)
+            if (rightPaddle.getY() > 1)
             {
-                player2.setLocation(player2.getX(), player2.getY() - PADDLE_SPEED);
-                player2Move = -PADDLE_SPEED;
+                rightPaddle.moveUp();
             }
         }
         //Ball physics | Currently inverts directions at all walls
         if (detectCollision())
         {
             //Collisions are simple for now but take into account paddle movement            
-            x *= -1;
+            horizontalSpeed *= -1;
             //Random mechanic to speed up ball speed after 5 seconds, just for fun.
             if (System.currentTimeMillis() - curTime >= 5000)
             {
                 ballSpeed++;
-                if (x < 0)
+                if (horizontalSpeed < 0)
                 {
-                    x = -ballSpeed;
+                    horizontalSpeed = -ballSpeed;
                 } else
                 {
-                    x = ballSpeed;
+                    horizontalSpeed = ballSpeed;
                 }
                 curTime = System.currentTimeMillis();
             }
@@ -123,16 +112,16 @@ public class Pong extends BasicGame
             ball.setLocation((SCREEN_WIDTH - BALL_SIZE) / 2, SCREEN_HEIGHT / 2);
             curTime = System.currentTimeMillis();
             ballSpeed = 2;
-            if (x < 0)
+            if (horizontalSpeed < 0)
             {
-                player2Score++;
-                x = ballSpeed;
+                rightPaddle.updateScore();
+                horizontalSpeed = ballSpeed;
             } else
             {
-                player1Score++;
-                x = -ballSpeed;
+                leftPaddle.updateScore();
+                horizontalSpeed = -ballSpeed;
             }
-            y = -ballSpeed;
+            verticalSpeed = -ballSpeed;
 
             try
             {
@@ -146,47 +135,47 @@ public class Pong extends BasicGame
         }
         if (ball.getY() <= 1 || ball.getY() >= SCREEN_HEIGHT - 1 - BALL_SIZE)
         {
-            y *= -1;
+            verticalSpeed *= -1;
         }
         
-        player1Move = 0;
-        player2Move = 0;
+        leftPaddle.resetDir();
+        rightPaddle.resetDir();
         
-        ball.setLocation(ball.getX() + x, ball.getY() + y);
-        gc.getGraphics().draw(ball);
+        ball.setLocation(ball.getX() + horizontalSpeed, ball.getY() + verticalSpeed);
+        //gc.getGraphics().draw(ball);
     }
 
     //Detect collisions with the paddles
     private static boolean detectCollision()
     {
         //When the ball is going to the left
-        if (x < 0)
+        if (horizontalSpeed < 0)
         {
             //Ball should be within paddle horizontal range
-            if (ball.getX() <= player1.getX() + PADDLE_WIDTH + 1)
+            if (ball.getX() <= leftPaddle.getX() + PADDLE_WIDTH + 1)
             {
                 //Ball should be within vertical range as well
-                if (ball.getY() >= player1.getY() && ball.getY() <= (player1.getY() + PADDLE_HEIGHT))
+                if (ball.getY() >= leftPaddle.getY() && ball.getY() <= (leftPaddle.getY() + PADDLE_HEIGHT))
                 {
                     //Here we change the vertical speed of the ball depending on player1
                     //movement
-                    if(player1Move > 0)
+                    if(leftPaddle.getDirection() > 0)
                     {
-                        if(y > 0)
+                        if(verticalSpeed > 0)
                         {
-                            y++;
+                            verticalSpeed++;
                         }
                         else
-                            y--;
+                            verticalSpeed--;
                     }
-                    else if(player1Move < 0)
+                    else if(leftPaddle.getDirection() < 0)
                     {
-                        if(y > 0)
+                        if(verticalSpeed > 0)
                         {
-                            y--;
+                            verticalSpeed--;
                         }
                         else
-                            y++;
+                            verticalSpeed++;
                     }
                     return true;
                 }
@@ -194,30 +183,30 @@ public class Pong extends BasicGame
         } else
         {
             //Ball should be within paddle horizontal range
-            if (ball.getX() + BALL_SIZE >= player2.getX() - 1)
+            if (ball.getX() + BALL_SIZE >= rightPaddle.getX() - 1)
             {
                 //Ball should be within vertical range as well
-                if (ball.getY() >= player2.getY() && ball.getY() <= (player2.getY() + PADDLE_HEIGHT))
+                if (ball.getY() >= rightPaddle.getY() && ball.getY() <= (rightPaddle.getY() + PADDLE_HEIGHT))
                 {
                     //Here we change the vertical speed of the ball depending on player2
                     //movement
-                    if(player2Move > 0)
+                    if(rightPaddle.getDirection() > 0)
                     {
-                        if(y > 0)
+                        if(verticalSpeed > 0)
                         {
-                            y++;
+                            verticalSpeed--;
                         }
                         else
-                            y--;
+                            verticalSpeed++;
                     }
-                    else if(player2Move < 0)
+                    else if(rightPaddle.getDirection() < 0)
                     {
-                        if(y > 0)
+                        if(verticalSpeed > 0)
                         {
-                            y--;
+                            verticalSpeed++;
                         }
                         else
-                            y++;
+                            verticalSpeed--;
                     }
                     return true;
                 }
@@ -233,14 +222,14 @@ public class Pong extends BasicGame
         //Draw game background
         g.setColor(Color.white);
         g.drawString("Pong", (SCREEN_WIDTH) / 4, 0);
-        g.drawString("" + player1Score, (SCREEN_WIDTH) / 2 - 30, 10);
-        g.drawString("" + player2Score, (SCREEN_WIDTH) / 2 + 20, 10);
+        g.drawString("" + leftPaddle.getScore(), (SCREEN_WIDTH) / 2 - 30, 10);
+        g.drawString("" + rightPaddle.getScore(), (SCREEN_WIDTH) / 2 + 20, 10);
         g.drawLine(SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT);
 
         
         g.setColor(Color.green);
-        g.draw(player1);
-        g.draw(player2);
+        g.draw(leftPaddle.getHitBox());
+        g.draw(rightPaddle.getHitBox());
         g.setColor(Color.white);
         g.draw(ball);
 
